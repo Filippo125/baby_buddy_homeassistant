@@ -7,7 +7,14 @@ from homeassistant.const import CONF_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONFIG_FLOW_VERSION, DEFAULT_PATH, LOGGER, PLATFORMS
+from .const import (
+    CONF_CONNECTION_MODE,
+    CONFIG_FLOW_VERSION,
+    CONNECTION_MODE_DIRECT,
+    DEFAULT_PATH,
+    LOGGER,
+    PLATFORMS,
+)
 from .coordinator import BabyBuddyConfigEntry, BabyBuddyCoordinator, BabyBuddyData
 from .services import async_setup_services
 
@@ -54,7 +61,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version == 1:
         new = {**entry.data}
         new[CONF_PATH] = DEFAULT_PATH
+        new[CONF_CONNECTION_MODE] = CONNECTION_MODE_DIRECT
 
+        hass.config_entries.async_update_entry(
+            entry, version=2, data=new
+        )
+
+    if entry.version == 2:
+        new = {**entry.data}
+        new[CONF_CONNECTION_MODE] = CONNECTION_MODE_DIRECT
         hass.config_entries.async_update_entry(
             entry, version=CONFIG_FLOW_VERSION, data=new
         )

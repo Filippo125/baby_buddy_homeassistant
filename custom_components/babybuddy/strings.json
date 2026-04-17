@@ -3,12 +3,20 @@
     "step": {
       "user": {
         "title": "Set up Baby Buddy",
-        "description": "The host entry must be in full URL format without sub path, e.g., https://192.168.1.100",
+        "description": "Use Direct mode for a normal Baby Buddy URL. Use Home Assistant Ingress for add-on installs that are only reachable through Home Assistant.",
         "data": {
+          "connection_mode": "Connection mode",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "path": "[%key:common::config_flow::data::path%]",
+          "ingress_token": "Ingress token",
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "Direct mode only. Full URL without sub path (for example, https://192.168.1.100).",
+          "ingress_token": "Home Assistant Ingress mode only. Token from /api/hassio_ingress/<token>/ URL.",
+          "path": "Direct mode only. Optional sub path for Baby Buddy.",
+          "port": "Direct mode only. API port for the Baby Buddy instance."
         }
       },
       "reauth_confirm": {
@@ -25,7 +33,16 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_fields": "Please complete all required fields for the selected connection mode."
+    },
+    "selector": {
+      "connection_mode": {
+        "options": {
+          "direct": "Direct URL (host/port/path)",
+          "ingress": "Home Assistant Ingress (add-on)"
+        }
+      }
     }
   },
   "options": {
