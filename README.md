@@ -17,16 +17,25 @@ This custom integration allows you to monitor [Baby Buddy](https://github.com/ba
 
 ## Configuration
 
-Adding BabyBuddy to your Home Assistant instance can be done via the user interface. The below parameters are required.
+Adding BabyBuddy to your Home Assistant instance can be done via the user interface.
+
+### Connection mode
+
+The integration now supports two connection modes:
+
+- **Direct URL (host/port/path)**: Existing behavior for standalone Baby Buddy deployments.
+- **Home Assistant Ingress (add-on)**: For Home Assistant add-on installations that are only reachable through Ingress.
 
 ### Parameters
 
-| Name    | Optional | Description                                                            |
-| ------- | :------: | ---------------------------------------------------------------------- |
-| address |    no    | Host URL for your instance of Baby Buddy, without sub path             |
-| port    |    no    | Host port (default = 8000)                                             |
-| path    |    no    | Sub path of your Baby Buddy instance (default = "")                    |
-| api_key |    no    | The API key from the user settings page on your instance of Baby Buddy |
+| Name           | Optional | Description                                                            |
+| -------------- | :------: | ---------------------------------------------------------------------- |
+| connection_mode |    no    | `direct` or `ingress`                                                  |
+| address        |    yes    | Direct mode only: host URL for Baby Buddy, without sub path            |
+| port           |    yes    | Direct mode only: host port (default = 8000)                           |
+| path           |    yes    | Direct mode only: sub path of your Baby Buddy instance (default = "")  |
+| ingress_token  |    yes    | Ingress mode only: token from `/api/hassio_ingress/<token>/` URL       |
+| api_key        |    no    | The API key from the user settings page on your instance of Baby Buddy |
 
 ### Options
 

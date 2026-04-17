@@ -25,9 +25,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .client import BabyBuddyClient
 from .const import (
+    CONF_CONNECTION_MODE,
     CONF_FEEDING_UNIT,
+    CONF_INGRESS_TOKEN,
     CONF_WEIGHT_UNIT,
     CONFIG_FLOW_VERSION,
+    CONNECTION_MODE_DIRECT,
+    CONNECTION_MODE_INGRESS,
     DEFAULT_NAME,
     DEFAULT_PATH,
     DEFAULT_PORT,
@@ -38,9 +42,13 @@ from .errors import AuthorizationError, ConnectError
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_CONNECTION_MODE, default=CONNECTION_MODE_DIRECT): vol.In(
+            [CONNECTION_MODE_DIRECT, CONNECTION_MODE_INGRESS]
+        ),
+        vol.Optional(CONF_HOST): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): str,
+        vol.Optional(CONF_INGRESS_TOKEN): str,
         vol.Required(CONF_API_KEY): str,
     }
 )
@@ -70,17 +78,25 @@ class BabyBuddyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            data = self._validate_user_input(user_input, errors)
+            if data is None:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors=errors,
+                )
+
             await self.async_set_unique_id(
-                f"{user_input[CONF_HOST]}-{user_input[CONF_API_KEY]}"
+                f"{data[CONF_CONNECTION_MODE]}-{data.get(CONF_HOST, data.get(CONF_INGRESS_TOKEN))}-{data[CONF_API_KEY]}"
             )
             self._abort_if_unique_id_configured()
 
             try:
                 client: BabyBuddyClient = BabyBuddyClient(
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
-                    user_input[CONF_PATH],
-                    user_input[CONF_API_KEY],
+                    data[CONF_HOST],
+                    data.get(CONF_PORT),
+                    data[CONF_PATH],
+                    data[CONF_API_KEY],
                     async_get_clientsession(self.hass),
                 )
                 await client.async_connect()
@@ -91,7 +107,8 @@ class BabyBuddyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{DEFAULT_NAME} ({user_input[CONF_HOST]})", data=user_input
+                    title=f"{DEFAULT_NAME} ({data[CONF_HOST]})",
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -99,6 +116,31 @@ class BabyBuddyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
+
+    def _validate_user_input(
+        self, user_input: dict[str, Any], errors: dict[str, str]
+    ) -> dict[str, Any] | None:
+        """Validate user config and normalize entry data."""
+        data = {**user_input}
+        connection_mode = data[CONF_CONNECTION_MODE]
+        if connection_mode == CONNECTION_MODE_DIRECT:
+            if not data.get(CONF_HOST):
+                errors["base"] = "missing_fields"
+            if errors:
+                return None
+            data[CONF_PATH] = data.get(CONF_PATH, DEFAULT_PATH)
+            return data
+
+        ingress_token = data.get(CONF_INGRESS_TOKEN, "").strip().strip("/")
+        if not ingress_token:
+            errors["base"] = "missing_fields"
+            return None
+
+        data[CONF_HOST] = "http://supervisor"
+        data[CONF_PATH] = f"/core/api/hassio_ingress/{ingress_token}"
+        data.pop(CONF_PORT, None)
+        data[CONF_INGRESS_TOKEN] = ingress_token
+        return data
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
@@ -116,12 +158,13 @@ class BabyBuddyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._reauth_unique_id)
         if user_input is not None and existing_entry is not None:
             user_input[CONF_HOST] = existing_entry.data[CONF_HOST]
-            user_input[CONF_PORT] = existing_entry.data[CONF_PORT]
+            if CONF_PORT in existing_entry.data:
+                user_input[CONF_PORT] = existing_entry.data[CONF_PORT]
             user_input[CONF_PATH] = existing_entry.data[CONF_PATH]
             try:
                 client: BabyBuddyClient = BabyBuddyClient(
                     user_input[CONF_HOST],
-                    user_input[CONF_PORT],
+                    user_input.get(CONF_PORT),
                     user_input[CONF_PATH],
                     user_input[CONF_API_KEY],
                     async_get_clientsession(self.hass),

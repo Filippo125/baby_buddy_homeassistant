@@ -3,12 +3,20 @@
     "step": {
       "user": {
         "title": "Configurar o Baby Buddy",
-        "description": "O endereço deve ser preenchido com exemplo, https://192.168.1.100",
+        "description": "Utilize o modo Direto para um URL normal do Baby Buddy. Utilize Home Assistant Ingress para instalações add-on acessíveis apenas pelo Home Assistant.",
         "data": {
+          "connection_mode": "Modo de ligação",
           "host": "Endereço",
           "port": "Porta",
           "path": "subpasta",
+          "ingress_token": "Token Ingress",
           "api_key": "Chave de API"
+        },
+        "data_description": {
+          "host": "Apenas no modo Direto. URL completo sem subpasta.",
+          "ingress_token": "Apenas no modo Ingress. Token no URL /api/hassio_ingress/<token>/.",
+          "path": "Apenas no modo Direto. Subpasta opcional do Baby Buddy.",
+          "port": "Apenas no modo Direto. Porta da API."
         }
       },
       "reauth_confirm": {
@@ -25,7 +33,16 @@
     },
     "error": {
       "cannot_connect": "Falha na ligação",
-      "invalid_auth": "Autenticação invalida"
+      "invalid_auth": "Autenticação invalida",
+      "missing_fields": "Preencha todos os campos obrigatórios para o modo escolhido."
+    },
+    "selector": {
+      "connection_mode": {
+        "options": {
+          "direct": "URL direto (endereço/porta/caminho)",
+          "ingress": "Home Assistant Ingress (add-on)"
+        }
+      }
     }
   },
   "options": {

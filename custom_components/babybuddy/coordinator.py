@@ -36,6 +36,10 @@ from .const import (
     ATTR_FIRST_NAME,
     ATTR_LAST_NAME,
     ATTR_RESULTS,
+    CONF_CONNECTION_MODE,
+    CONF_INGRESS_TOKEN,
+    CONNECTION_MODE_DIRECT,
+    CONNECTION_MODE_INGRESS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
@@ -80,10 +84,18 @@ class BabyBuddyCoordinator(DataUpdateCoordinator):
         )
         self.hass = hass
         self.entry: ConfigEntry = entry
+        connection_mode = entry.data.get(CONF_CONNECTION_MODE, CONNECTION_MODE_DIRECT)
+        host = entry.data[CONF_HOST]
+        port = entry.data.get(CONF_PORT)
+        path = entry.data[CONF_PATH]
+        if connection_mode == CONNECTION_MODE_INGRESS:
+            host = "http://supervisor"
+            port = None
+            path = f"/core/api/hassio_ingress/{entry.data[CONF_INGRESS_TOKEN]}"
         self.client: BabyBuddyClient = BabyBuddyClient(
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            entry.data[CONF_PATH],
+            host,
+            port,
+            path,
             entry.data[CONF_API_KEY],
             async_get_clientsession(self.hass),
         )

@@ -18,15 +18,20 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final[str] = "babybuddy"
 
+CONF_CONNECTION_MODE: Final[str] = "connection_mode"
 CONF_FEEDING_UNIT: Final[str] = "feedings"
+CONF_INGRESS_TOKEN: Final[str] = "ingress_token"
 CONF_WEIGHT_UNIT: Final[str] = "weight"
+
+CONNECTION_MODE_DIRECT: Final[str] = "direct"
+CONNECTION_MODE_INGRESS: Final[str] = "ingress"
 
 DEFAULT_NAME: Final[str] = "Baby Buddy"
 DEFAULT_PORT: Final[int] = 8000
 DEFAULT_PATH: Final[str] = ""
 DEFAULT_SCAN_INTERVAL: Final[int] = 60
 
-CONFIG_FLOW_VERSION: Final[int] = 2
+CONFIG_FLOW_VERSION: Final[int] = 3
 
 ATTR_AMOUNT: Final[str] = "amount"
 ATTR_BABYBUDDY_CHILD: Final[str] = "babybuddy_child"
